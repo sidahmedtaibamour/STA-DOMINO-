@@ -1,0 +1,62 @@
+name: Build Domino APK
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+      - name: Accept Android licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: Locate the project (folder in the repo, or the newest zip)
+        run: |
+          if [ -f DominoApp/settings.gradle ]; then
+            echo "Using the DominoApp folder in the repository"
+            echo "PROJECT_DIR=DominoApp" >> "$GITHUB_ENV"
+          else
+            BEST=""; BT=0
+            for f in *.zip; do
+              [ -f "$f" ] || continue
+              t=$(git log -1 --format=%ct -- "$f"); t=${t:-0}
+              if [ "$t" -ge "$BT" ]; then BT=$t; BEST="$f"; fi
+            done
+            if [ -z "$BEST" ]; then echo "No project folder and no .zip file found in the repository root"; exit 1; fi
+            echo "Using zip: $BEST"
+            rm -rf proj && mkdir proj && unzip -q -o "$BEST" -d proj
+            S=$(find proj -maxdepth 4 -name settings.gradle | head -n1)
+            if [ -z "$S" ]; then echo "settings.gradle not found inside the zip"; exit 1; fi
+            echo "PROJECT_DIR=$(dirname "$S")" >> "$GITHUB_ENV"
+          fi
+      - name: Sanity-check the game file
+        run: |
+          F=$(find "$PROJECT_DIR" -name index.html -path "*assets*" | head -n1)
+          test -s "$F" && echo "index.html found: $(wc -c < "$F") bytes"
+          python3 - "$F" <<'PY'
+          import sys,re
+          s=open(sys.argv[1],encoding='utf-8').read()
+          m=re.search(r'<script>(.*?)</script>',s,re.S)
+          assert m and len(m.group(1))>1000, 'script missing'
+          print('script block OK')
+          PY
+      - name: Build debug APK
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: gradle assembleDebug --no-daemon --stacktrace
+      - name: Rename APK
+        run: |
+          cp "$PROJECT_DIR"/app/build/outputs/apk/debug/*.apk STA-Domino.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: STA-Domino-APK
+          path: STA-Domino.apk
