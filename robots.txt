@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sidahmedtaibamour.github.io/sitemap.xml

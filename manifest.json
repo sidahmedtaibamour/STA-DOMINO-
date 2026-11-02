@@ -1,0 +1,38 @@
+{
+  "name": "دومينو — Domino",
+  "short_name": "دومينو",
+  "description": "لعبة دومينو عربية مجانية بأحجار واقعية: العب ضد البوت أو مع أصدقائك أونلاين أو بالواي فاي، فريقان ٢ ضد ٢ أو فردي.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06100c",
+  "theme_color": "#06100c",
+  "categories": [
+    "games",
+    "board"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
